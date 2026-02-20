@@ -349,7 +349,7 @@ public class QPowerDatacenter extends PowerDatacenter {
             } else if (cpuutil >= 90 && cpuutil <= 100) {
                 convertresult = "9";
             } else {
-                System.out.println("CPU利用率转化出现问题");
+                System.out.println("Error: CPU utilization conversion out of range");
                 break;
             }
             convertList += convertresult;

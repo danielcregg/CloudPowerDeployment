@@ -32,9 +32,9 @@ public class QScheduleTest {
     private static List<PowerHost> hostList;
     private static DatacenterBroker broker;
     private static VmAllocationAssigner vmAllocationAssigner;
-    private double LEARNING_GAMMA = 0.9; // 强化学习算法的γ值
-    private double LEARNING_ALPHA = 0.8; // 强化学习算法的α值
-    private double LEARNING_EPSILON = 0.5; // 强化学习算法的ε值
+    private double LEARNING_GAMMA = 0.9; // Discount factor (gamma)
+    private double LEARNING_ALPHA = 0.8; // Learning rate (alpha)
+    private double LEARNING_EPSILON = 0.5; // Exploration rate (epsilon)
     private static double smallestdata = Double.MAX_VALUE;
     public List<Double> execute() throws Exception {
 
@@ -79,7 +79,7 @@ public class QScheduleTest {
                 smallestdata = QPowerDatacenter.allpower.get(i);
             }
         }
-        System.out.println("最小值：" + smallestdata);
+        System.out.println("Minimum power: " + smallestdata);
         return QPowerDatacenter.allpower;
     }
 

@@ -1,80 +1,123 @@
 # CloudPowerDeployment
 
-> **Note:** This repository is a fork of [luxianglin/CloudPowerDeployment](https://github.com/luxianglin/CloudPowerDeployment).
+> Energy-efficient virtual machine placement using reinforcement learning and CloudSim 4.0.
 
-![Java](https://img.shields.io/badge/Java-ED8B00?style=flat-square&logo=openjdk&logoColor=white)
-![MATLAB](https://img.shields.io/badge/MATLAB-0076A8?style=flat-square&logo=mathworks&logoColor=white)
+![Java](https://img.shields.io/badge/Java_8-ED8B00?style=flat-square&logo=openjdk&logoColor=white)
+![CloudSim](https://img.shields.io/badge/CloudSim_4.0-0076A8?style=flat-square)
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)
-
-An energy-efficient virtual machine placement strategy for cloud data centers using reinforcement learning. This project implements an optimized Q-Learning(lambda) algorithm and benchmarks it against Q-Learning, Greedy, and PSO algorithms using the CloudSim simulation platform.
 
 ## Overview
 
-As cloud data centers grow rapidly, their energy consumption has become a significant concern. This project models the virtual machine (VM) placement problem using reinforcement learning, then optimizes the Q-Learning(lambda) algorithm through state aggregation and temporal credit assignment. Simulation experiments on CloudSim with real-world datasets demonstrate that the optimized algorithm reduces physical server energy consumption more effectively than standard Q-Learning, Greedy, and PSO approaches.
+This project models the virtual machine (VM) placement problem in cloud data centers as a reinforcement learning (RL) problem. It implements multiple RL algorithms and baseline strategies, then evaluates their energy efficiency using the CloudSim simulation platform with real-world PlanetLab workload traces.
 
-Based on the research paper: "An Energy-Optimized Virtual Machine Placement Strategy Based on Reinforcement Learning."
+The key insight is that intelligent VM placement can significantly reduce the total energy consumption of a data center by consolidating workloads onto fewer physical servers while maintaining performance SLAs.
 
-## Features
+> Based on the research paper: *"An Energy-Optimized Virtual Machine Placement Strategy Based on Reinforcement Learning."*
+> Fork of [luxianglin/CloudPowerDeployment](https://github.com/luxianglin/CloudPowerDeployment).
 
-- Q-Learning(lambda) algorithm with state aggregation and temporal credit optimizations
-- Comparison benchmarks against Q-Learning, Greedy, SARSA, and PSO algorithms
-- Power models for real server hardware (HP ProLiant ML110 G5, DL360 G7, DL360 Gen9)
-- CloudSim 4.0 integration for realistic cloud simulation
-- MATLAB integration for generating experiment result charts
-- Multiple test scenarios: algorithm comparison, task scaling, CPU utilization, state convergence, and temporal reliability
+## Algorithms Implemented
+
+| Algorithm | Type | Description |
+|-----------|------|-------------|
+| **Q-Learning** | RL (off-policy) | Standard tabular Q-Learning with epsilon-greedy exploration |
+| **Q-Learning(Lambda)** | RL (off-policy) | Q-Learning with eligibility traces for temporal credit assignment |
+| **SARSA** | RL (on-policy) | On-policy TD control using actual next-action values |
+| **SARSA(Lambda)** | RL (on-policy) | SARSA with eligibility traces |
+| **Q-Learning + Init** | RL (off-policy) | Q-Learning with reward-based Q-table initialization |
+| **Greedy** | Baseline | Places VM on host with minimum energy increase |
+| **Fair** | Baseline | Places VM on host with most available MIPS |
+| **Random** | Baseline | Random host selection (lower bound) |
+
+## State Space, Action Space, and Reward Function
+
+### State Space (Feature-Based)
+Instead of the intractable per-host utilization encoding, the state is represented by three aggregate features:
+- **Average CPU utilization** across all hosts (discretized into 10 bins)
+- **Active host ratio** - fraction of hosts running at least one VM (10 bins)
+- **VM density** - total VMs divided by 10, capped at 9
+
+This gives a state space of ~1,000 states, compared to 10^300 in the original design.
+
+### Action Space
+The action is selecting a physical host (0 to N-1) for placing the incoming VM.
+
+### Reward Function
+The reward is the **negative normalized power consumption**:
+```
+reward = -currentPower / maxObservedPower
+```
+This is bounded in [-1, 0], where 0 means zero power consumption (ideal) and -1 means maximum observed power. This replaces the original `Math.pow(lastPower/currentPower, 10000)` which caused numerical overflow/underflow.
+
+## Server Power Models
+
+Three real server hardware models from SPECpower benchmarks:
+- **HP ProLiant ML110 G5** (93.7W idle, 135W peak)
+- **HP ProLiant DL360 G7** (54.6W idle, 178W peak)
+- **HP ProLiant DL360 Gen9** (45W idle, 276W peak)
 
 ## Prerequisites
 
-- **Java** 8 or later
-- **Maven** for dependency management
-- **MATLAB** (optional, for generating charts)
-- **CloudSim 4.0** (included in the `jars/` directory)
+- **Java** 8
+- **Maven** 3.x
 
-## Getting Started
+## Build & Run
 
-### Installation
+```bash
+# Clone
+git clone https://github.com/danielcregg/CloudPowerDeployment.git
+cd CloudPowerDeployment
 
-1. Clone the repository:
+# Build
+mvn compile
 
-   ```bash
-   git clone https://github.com/danielcregg/CloudPowerDeployment.git
-   cd CloudPowerDeployment
-   ```
+# Run algorithm comparison
+mvn exec:java -Dexec.mainClass="newcloud.Test.AlgorithmCompare"
 
-2. Build with Maven:
+# Run with custom workload folder
+mvn exec:java -Dexec.mainClass="newcloud.Test.AlgorithmCompare" \
+  -Dcloudsim.input.folder="src/main/resources/datas/100"
 
-   ```bash
-   mvn compile
-   ```
+# Run tests
+mvn test
+```
 
-### Usage
-
-Run any of the test scenarios in the `src/main/java/newcloud/Test/` directory:
+## Test Scenarios
 
 | Test Class | Description |
 |------------|-------------|
-| `AlgorithmCompare` | Compares energy consumption across Q-Learning(lambda), Q-Learning, Greedy, and PSO |
-| `TaskCompare` | Evaluates performance with varying numbers of VM placement requests |
-| `CPUUtilizationCompare` | Analyzes CPU utilization across different algorithms |
-| `StateConverge` | Tests state aggregation convergence behavior |
-| `TimeReliability` | Evaluates temporal credit assignment reliability |
+| `newcloud.Test.AlgorithmCompare` | Compares energy consumption across Q-Learning(Lambda), Q-Learning, Greedy, and Q-Learning+Init |
+| `newcloud.Test.TaskCompare` | Evaluates performance with varying numbers of VM placement requests (50-300) |
+| `newcloud.Test.CPUUtilizationCompare` | Analyzes CPU utilization distribution across different algorithms |
+| `newcloud.Test.StateConverge` | Tests state aggregation convergence vs. non-aggregated state |
+| `newcloud.Test.TimeReliability` | Evaluates temporal credit assignment (Lambda traces vs. standard) |
 
-Example:
+## PlanetLab Workload Traces
 
-```bash
-mvn exec:java -Dexec.mainClass="newcloud.Test.AlgorithmCompare"
+The `src/main/resources/` directory contains real-world CPU utilization traces from the [PlanetLab](https://www.planet-lab.org/) distributed testbed, collected in March-April 2011. Each file represents one VM's CPU utilization over a 24-hour period, sampled every 5 minutes (288 data points per file).
+
+Available dataset sizes: 50, 100, 150, 200, 250, 300 VMs.
+
+## Project Structure
+
 ```
-
-> **Note:** Chart generation requires MATLAB to be installed. Without MATLAB, the algorithms will still run and produce numerical results.
-
-## Tech Stack
-
-- **Language:** Java 8
-- **Build Tool:** Maven
-- **Simulation:** CloudSim 4.0
-- **Optimization:** jswarm-pso (Particle Swarm Optimization)
-- **Visualization:** MATLAB (via Java-MATLAB bridge)
-- **Data Processing:** Apache POI
+src/main/java/newcloud/
+  ├── Constants.java              # Simulation parameters
+  ├── datacenter/
+  │   ├── PowerDatacenterRL.java  # Base class (shared logic)
+  │   ├── PowerDatacenterLearning.java       # Q-Learning
+  │   ├── PowerDatacenterLearningLamda.java  # Q-Learning(Lambda)
+  │   ├── PowerDatacenterSarsa.java          # SARSA
+  │   ├── PowerDatacenterSarsa_lamda.java    # SARSA(Lambda)
+  │   ├── PowerDatacenterGready.java         # Greedy
+  │   ├── PowerDatacenterFair.java           # Fair
+  │   └── PowerDatacenterRandom.java         # Random
+  ├── policy/                     # VM allocation strategies
+  ├── executedata/                # Experiment execution harnesses
+  ├── PowerModel/                 # Server power models (SPECpower)
+  └── Test/                       # Comparison experiments
+src/test/java/newcloud/           # JUnit tests
+jars/                             # CloudSim 4.0 and dependencies
+```
 
 ## License
 

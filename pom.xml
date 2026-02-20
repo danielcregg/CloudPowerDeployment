@@ -4,29 +4,80 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>groupId</groupId>
-    <artifactId>PowerDeployment</artifactId>
+    <groupId>com.cloudpower</groupId>
+    <artifactId>CloudPowerDeployment</artifactId>
     <version>1.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
+
+    <name>CloudPowerDeployment</name>
+    <description>Energy-efficient VM placement using reinforcement learning and CloudSim 4.0</description>
+
+    <properties>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
     <build>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.1</version>
                 <configuration>
-                    <source>8</source>
-                    <target>8</target>
+                    <source>1.8</source>
+                    <target>1.8</target>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.22.2</version>
             </plugin>
         </plugins>
     </build>
 
     <dependencies>
-        <!-- https://mvnrepository.com/artifact/org.apache.poi/poi -->
+        <!-- CloudSim 4.0 (local JAR, not available in Maven Central) -->
+        <dependency>
+            <groupId>org.cloudbus.cloudsim</groupId>
+            <artifactId>cloudsim</artifactId>
+            <version>4.0</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/jars/cloudsim-4.0.jar</systemPath>
+        </dependency>
+
+        <!-- CloudSim Examples 4.0 (for PlanetLabHelper and other utilities) -->
+        <dependency>
+            <groupId>org.cloudbus.cloudsim</groupId>
+            <artifactId>cloudsim-examples</artifactId>
+            <version>4.0</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/jars/cloudsim-examples-4.0.jar</systemPath>
+        </dependency>
+
+        <!-- jswarm-pso for Particle Swarm Optimization -->
+        <dependency>
+            <groupId>net.sourceforge.jswarm-pso</groupId>
+            <artifactId>jswarm-pso</artifactId>
+            <version>2.08</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/jars/jswarm-pso_2_08.jar</systemPath>
+        </dependency>
+
+        <!-- Apache POI for Excel generation -->
         <dependency>
             <groupId>org.apache.poi</groupId>
             <artifactId>poi</artifactId>
             <version>3.17</version>
         </dependency>
 
+        <!-- JUnit 4 for testing -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.13.2</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 </project>

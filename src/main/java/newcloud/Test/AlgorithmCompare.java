@@ -1,123 +1,67 @@
 package newcloud.Test;
 
-import com.mathworks.toolbox.javabuilder.MWArray;
-import com.mathworks.toolbox.javabuilder.MWClassID;
-import com.mathworks.toolbox.javabuilder.MWComplexity;
-import com.mathworks.toolbox.javabuilder.MWNumericArray;
-import FourDrawPlot.*;
-import newcloud.ExceuteData.*;
+import newcloud.executedata.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static newcloud.Constants.Iteration;
 
-
 /**
- * Created by root on 8/25/17.
+ * Compares energy consumption across Q-Learning(Lambda), Q-Learning,
+ * Greedy, and Q-Learning with initialization strategies.
+ * <p>
+ * Results are printed to stdout. MATLAB plotting has been removed;
+ * use the raw data with any plotting tool (matplotlib, gnuplot, etc.).
+ * </p>
  */
 public class AlgorithmCompare {
 
     public static void main(String[] args) {
-        // TODO Auto-generated method stub
-        MWNumericArray x = null; // 存放x值的数组
-        MWNumericArray y1 = null; // 存放y值的数组
-        MWNumericArray y2 = null; // 存放y值的数组
-        MWNumericArray y3 = null; // 存放y值的数组
-        MWNumericArray y4 = null; // 存放y值的数组
-
-        Plotter thePlot = null; // plotter类的实例（在MatLab编译时，新建的类）
-        int n = Iteration; // 作图点数
-        int num = 1;
         try {
-            // 分配x、y的值
-            int[] dims = {1, n};
-            x = MWNumericArray.newInstance(dims, MWClassID.DOUBLE,
-                    MWComplexity.REAL);
-            y1 = MWNumericArray.newInstance(dims, MWClassID.DOUBLE,
-                    MWComplexity.REAL);
-            y2 = MWNumericArray.newInstance(dims, MWClassID.DOUBLE,
-                    MWComplexity.REAL);
-            y3 = MWNumericArray.newInstance(dims, MWClassID.DOUBLE,
-                    MWComplexity.REAL);
-            y4 = MWNumericArray.newInstance(dims, MWClassID.DOUBLE,
-                    MWComplexity.REAL);
+            System.out.println("=== Algorithm Comparison ===");
+            System.out.println("Iterations: " + Iteration);
 
-            LearningScheduleTest learningScheduleTest = new LearningScheduleTest();
-            List<Double> learningPowerList = learningScheduleTest.execute();
-            for (int i = 1; i <= learningPowerList.size(); i++) {
-                x.set(i, i);
-                y1.set(i, learningPowerList.get(i - 1));
-            }
+            LearningScheduleTest learningTest = new LearningScheduleTest();
+            List<Double> learningPower = learningTest.execute();
+            System.out.println("\nQ-Learning power data: " + learningPower.size() + " points");
 
-            LearningLamdaScheduleTest learningLamdaScheduleTest = new LearningLamdaScheduleTest();
-            List<Double> lamdaPowerList = learningLamdaScheduleTest.execute();
-            for (int i = 1; i <= lamdaPowerList.size(); i++) {
-                x.set(i, i);
-                y2.set(i, lamdaPowerList.get(i - 1));
-            }
+            LearningLamdaScheduleTest lamdaTest = new LearningLamdaScheduleTest();
+            List<Double> lamdaPower = lamdaTest.execute();
+            System.out.println("\nQ-Learning(Lambda) power data: " + lamdaPower.size() + " points");
 
-            GreedyScheduleTest greedyScheduleTest = new GreedyScheduleTest();
-            List<Double> greedyPowerList = greedyScheduleTest.execute();
-            for (int i = 1; i <= greedyPowerList.size(); i++) {
-                x.set(i, i);
-                y3.set(i, greedyPowerList.get(i - 1));
-            }
+            GreedyScheduleTest greedyTest = new GreedyScheduleTest();
+            List<Double> greedyPower = greedyTest.execute();
+            System.out.println("\nGreedy power data: " + greedyPower.size() + " points");
 
-            LearningAndInitScheduleTest fairScheduleTest = new LearningAndInitScheduleTest();
-            List<Double> fairPowerList = fairScheduleTest.execute();
-            for (int i = 1; i <= fairPowerList.size(); i++) {
-                x.set(i, i);
-                y4.set(i, fairPowerList.get(i - 1));
-            }
+            LearningAndInitScheduleTest initTest = new LearningAndInitScheduleTest();
+            List<Double> initPower = initTest.execute();
+            System.out.println("\nQ-Learning(Init) power data: " + initPower.size() + " points");
 
-            System.out.println(getAverageResult(learningPowerList, learningPowerList.size() / 10));
-            System.out.println(getAverageResult(lamdaPowerList, lamdaPowerList.size() / 10));
-            System.out.println(getAverageResult(greedyPowerList, greedyPowerList.size() / 10));
-            System.out.println(getAverageResult(fairPowerList, fairPowerList.size() / 10));
+            System.out.println("\n=== Average Results ===");
+            System.out.println("Q-Learning:        " + getAverageResult(learningPower, Math.max(1, learningPower.size() / 10)));
+            System.out.println("Q-Learning(Lambda): " + getAverageResult(lamdaPower, Math.max(1, lamdaPower.size() / 10)));
+            System.out.println("Greedy:            " + getAverageResult(greedyPower, Math.max(1, greedyPower.size() / 10)));
+            System.out.println("Q-Learning(Init):  " + getAverageResult(initPower, Math.max(1, initPower.size() / 10)));
 
-//            RandomScheduleTest randomScheduleTest = new RandomScheduleTest();
-//            List<Double> randomPowerList = randomScheduleTest.execute();
-//            for (int i = 1; i <= randomPowerList.size(); i++) {
-//                x.set(i, i);
-//                y4.set(i, randomPowerList.get(i - 1));
-//            }
-
-//            LearningAndInitScheduleTest learningAndInitScheduleTest = new LearningAndInitScheduleTest();
-//            List<Double> learningAndInitPowerList = learningAndInitScheduleTest.execute();
-//            for (int i = 1; i <= learningAndInitPowerList.size(); i++) {
-//                x.set(i, i);
-//                y4.set(i, learningAndInitPowerList.get(i - 1));
-//            }
-            // 初始化plotter的对象
-            thePlot = new Plotter();
-
-            // 作图
-            thePlot.drawplot(x, y1, "Q-Learning", y2, "Q-Learning(Lamda)", y3, "Greedy", y4, "PSO", "迭代次数", "能耗", "各类算法随迭代次数的能耗变化");
-            thePlot.waitForFigures();
         } catch (Exception e) {
             System.out.println("Exception: " + e.toString());
-        } finally {
-            // 释放本地资源
-            MWArray.disposeArray(x);
-            MWArray.disposeArray(y1);
-            MWArray.disposeArray(y2);
-            MWArray.disposeArray(y3);
-            MWArray.disposeArray(y4);
-            if (thePlot != null)
-                thePlot.dispose();
+            e.printStackTrace();
         }
-
     }
 
+    /**
+     * Compute windowed averages of the power data.
+     */
     public static List<Double> getAverageResult(List<Double> datas, int step) {
         List<Double> temp = new ArrayList<>();
-        int num = datas.size() / step;
+        List<Double> copy = new ArrayList<>(datas);
+        int num = copy.size() / step;
         for (int i = 0; i < num; i++) {
             double total = 0;
             for (int j = 0; j < step; j++) {
-                total += datas.get(0);
-                datas.remove(0);
+                total += copy.get(0);
+                copy.remove(0);
             }
             temp.add(total / step);
         }
